@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: companydb
+    ports:
+      - "3307:3306"  # host:container mapping
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  employee-service:
+    build: ./services/employee
+    container_name: employee-service
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: companydb
+    ports:
+      - "5001:5001"
+    depends_on:
+      - mysql
+
+  department-service:
+    build: ./services/department
+    container_name: department-service
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: companydb
+    ports:
+      - "5002:5002"
+    depends_on:
+      - mysql
+
+  payroll-service:
+    build: ./services/payroll
+    container_name: payroll-service
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: companydb
+    ports:
+      - "5003:5003"
+    depends_on:
+      - mysql
+
+  web-frontend:
+    build: ./frontend/web-frontend
+    container_name: web-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - employee-service
+      - department-service
+      - payroll-service
+
+volumes:
+  mysql-data:
